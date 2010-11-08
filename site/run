@@ -1,0 +1,4 @@
+#!/bin/bash
+
+node ./index.js 2> /dev/null &
+
