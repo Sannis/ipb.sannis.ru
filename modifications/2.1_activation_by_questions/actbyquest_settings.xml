@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<settingexport exported="1172039667">
+	<settinggroup>
+		<setting>
+			<conf_id>400</conf_id>
+			<conf_title>Барьер правильных ответов</conf_title>
+			<conf_description>Количество правильных ответов, необходимых для успешного завершения активации</conf_description>
+			<conf_group>33</conf_group>
+			<conf_type>input</conf_type>
+			<conf_key>actbyquest_num</conf_key>
+			<conf_value></conf_value>
+			<conf_default><![CDATA[0]]></conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>1</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>actbyquest</conf_title_keyword>
+		</setting>
+		
+		<setting>
+			<conf_id>401</conf_id>
+			<conf_title>Сообщение об успехе</conf_title>
+			<conf_description>Этот текст будет отображаться гостям форума</conf_description>
+			<conf_group>33</conf_group>
+			<conf_type>textarea</conf_type>
+			<conf_key>actbyquest_success</conf_key>
+			<conf_value></conf_value>
+			<conf_default><![CDATA[Ваш текст]]></conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>2</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>actbyquest</conf_title_keyword>
+		</setting>
+		
+		<setting>
+			<conf_id>402</conf_id>
+			<conf_title>Сообщение о неудаче</conf_title>
+			<conf_description>Этот текст будет отображаться неактивированным пользователям</conf_description>
+			<conf_group>33</conf_group>
+			<conf_type>textarea</conf_type>
+			<conf_key>actbyquest_fail</conf_key>
+			<conf_value></conf_value>
+			<conf_default><![CDATA[Ваш текст]]></conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>3</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>actbyquest</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_is_title>1</conf_is_title>
+			<conf_title_keyword>actbyquest</conf_title_keyword>
+			<conf_title_title>Activation By Questions</conf_title_title>
+			<conf_title_desc>Настройки системы активации посредством вопросов</conf_title_desc>
+			<conf_title_noshow>0</conf_title_noshow>
+		</setting>
+	</settinggroup>
+</settingexport>
