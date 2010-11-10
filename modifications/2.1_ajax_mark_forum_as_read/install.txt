@@ -1,0 +1,235 @@
+----------------------------------------------------
+Отметить форум прочтённым на Ajax by Sannis
+----------------------------------------------------
+Спасибо Song'у и Arhar'у за моральную и техническую помошь
+----------------------------------------------------
+Stable Relise, для Invision Power Board 2.1.x
+----------------------------------------------------
+----------------------------------------------------
+Мод изменяет систему отметки форумов прочитанными,
+после установки это будет происходить без перезагрузки
+страницы, как сделано в IP.Board 2.2.х. Т.е. если в 
+браузере пользователя возможно использование AJAX,
+при нажатии на иконку форума он и подфорумы будут
+отмечаться прочитанным без перезагрузки всей страницы.
+----------------------------------------------------
+----------------------------------------------------
+Совместим с модом иконок форумов с инвизионайза и от Alex/AT
+ВНИМАНИЕ!!! не расстраивайтесь, если у вас установлен
+мод иконок форума, не упомянутый в описании, спрашивайте
+в теме поддержки, решенее найдётся.
+----------------------------------------------------
+----------------------------------------------------
+Объём работ:
+----------------------------------------------------
+Файлы для изменения:
+./sources/action_public/xmlout.php
+./sources/classes/class_forums.php(опционально)
+Шаблоны для изменения для изменения:
+skin_boards->forum_img_with_link
+skin_boards->subforum_img_with_link
+----------------------------------------------------
+----------------------------------------------------
+
+1. Скопировать файл sns_ajax_mark_forum.js в папку ./jscripts/
+
+2. Заменить содержимое шаблона skin_boards->forum_img_with_link на:
+
+<if='ipb.can_use_fancy_js != 0'>
+<div id='f-{$id}' onclick='return mark_forum_read("{$id}");' title='{ipb.lang['bi_markread']}'>{$img}</div>
+</if>
+<else>
+<a id='f-{$id}' href="{ipb.script_url}act=Login&amp;CODE=04&amp;f={$id}&amp;fromforum={ipb.input['f']}&amp;i=1" title="{ipb.lang['bi_markread']}">{$img}</a>
+</else>
+
+
+3. Заменить содержимое шаблона skin_boards->subforum_img_with_link на:
+
+<if='ipb.can_use_fancy_js != 0'>
+<div id='f-{$id}' onclick='return mark_forum_read("{$id}");' title='{ipb.lang['bi_markallread']}'>{$img}</div>
+</if>
+<else>
+<a id='f-{$id}' href="{ipb.script_url}act=Login&amp;CODE=04&amp;f={$id}&amp;fromforum={ipb.input['f']}&amp;i=1" title="{ipb.lang['bi_markallread']}">{$img}</a>
+</else>
+
+
+4. В шаблоне skin_global->global_board_header найти
+
+    <script type="text/javascript" src='{ipb.vars['img_url']}/folder_js_skin/ips_menu_html.js'></script>
+
+    Вставить после:
+
+    <script type="text/javascript" src="jscripts/sns_ajax_mark_forum.js"></script>
+
+
+5. В файле ./sources/action_public/xmlout.php заменить целиком функцию mark_forum_as_read() на
+
+    /*--------------------------------------------*/
+	// AJAX Mark forum as read mod by Sannis
+	/*--------------------------------------------*/
+
+    function mark_forum_as_read()
+    {
+        //-----------------------------------------
+        // INIT
+        //-----------------------------------------
+
+		$forum_id      = intval($this->ipsclass->input['fid']);
+        $forum_data    = $this->ipsclass->forums->forum_by_id[ $forum_id ];
+        $children      = $this->ipsclass->forums->forums_get_children( $forum_data['id'] );
+        $save          = array();
+        $delete        = array();
+        
+        //-----------------------------------------
+        // Check
+        //-----------------------------------------
+        
+        if ( ! $forum_data['id'] )
+        {
+        	$this->return_string('fail');
+			exit();
+        }
+		
+		$md5_check     = substr( $this->ipsclass->parse_clean_value( rawurldecode( $_REQUEST['md5check'] ) ), 0, 32 );		
+		if (  $md5_check != $this->ipsclass->return_md5_check() )
+        {
+            $this->return_string('fail');
+            exit();
+        }
+        
+        //-----------------------------------------
+        // Add kids
+        //-----------------------------------------
+       
+		if ( is_array( $children ) and count($children) )
+		{
+			foreach( $children as $id )
+			{
+				$this->ipsclass->forum_read[ $id ] = time();
+				
+				$delete[]    = $id;
+				
+				$save[ $id ] = array( 'marker_forum_id'     => $id,
+									  'marker_member_id'    => $this->ipsclass->member['id'],
+									  'marker_last_update'  => time(),
+									  'marker_unread'       => 0,
+									  'marker_last_cleared' => time() );
+			}
+		}
+        
+        //-----------------------------------------
+        // Add in the current forum...
+        //-----------------------------------------
+        
+        $this->ipsclass->forum_read[ $forum_data['id'] ] = time();
+        
+        $delete[]    = $forum_data['id'];
+					
+		$save[ $forum_data['id'] ] = array( 'marker_forum_id'     => $forum_data['id'],
+											'marker_member_id'    => $this->ipsclass->member['id'],
+											'marker_last_update'  => time(),
+											'marker_unread'       => 0,
+											'marker_last_cleared' => time() );
+        
+        //-----------------------------------------
+        // Reset topic markers
+        //-----------------------------------------
+        
+        if ( $this->ipsclass->vars['db_topic_read_cutoff'] and $this->ipsclass->member['id'] )
+        {
+        	if ( count( $delete ) )
+        	{
+        		$this->ipsclass->DB->build_and_exec_query( array( 'delete' => 'topic_markers',
+        													      'where'  => 'marker_member_id='.$this->ipsclass->member['id'].' AND marker_forum_id IN ('.implode(',',$delete ).')' ) );
+        		
+        		foreach( $save as $id => $data )
+        		{
+        			$this->ipsclass->DB->do_insert( 'topic_markers', $data );
+        		}
+        	}
+        }
+		
+		//-----------------------------------------
+		// Set "reset cookie" variable
+		//-----------------------------------------
+		
+		$cookie_name = $this->vars['cookie_id'].'forum_read';
+		$cookie_value = addslashes(serialize($this->ipsclass->forum_read));
+		$cookie_domain = $this->vars['cookie_domain'] == "" ? ""  : $this->vars['cookie_domain'];
+        $cookie_path   = $this->vars['cookie_path']   == "" ? "/" : $this->vars['cookie_path'];
+      
+        $cookie = "<$cookie_name><$cookie_value><$cookie_domain><$cookie_path>";
+		
+		//-----------------------------------------
+		// Return normal forum img
+		//-----------------------------------------
+		
+		if ( ! $this->compiled_templates['skin_boards'] )
+		{
+			$this->ipsclass->load_template( 'skin_boards' );
+		}
+		
+		$info = $this->ipsclass->forums->forums_format_lastinfo( $this->ipsclass->forums->forums_calc_children( $forum_id, $forum_data ) );
+		$img = $info['img_new_post'];
+		
+		//-----------------------------------------
+      	// Replace the img macroses
+      	//-----------------------------------------
+      	
+      	if ( is_array( $this->ipsclass->skin['_macros'] ) )
+      	{
+			foreach( $this->ipsclass->skin['_macros'] as $i => $row )
+			{
+				if ( $row['macro_value'] != "" )
+				{
+					$img = str_replace( "<{".$row['macro_value']."}>", $row['macro_replace'], $img );
+				}
+			}
+		}
+		
+		$img = str_replace( "<#IMG_DIR#>", $this->ipsclass->skin['_imagedir'], $img );
+		$img = str_replace( "<#EMO_DIR#>", $this->ipsclass->skin['_emodir']  , $img );
+		
+		//-----------------------------------------
+		// Images on another server?
+		//-----------------------------------------
+		
+		if ( $this->ipsclass->vars['ipb_img_url'] )
+		{
+			$img = preg_replace( "#img\s+?src=[\"']style_(images|avatars|emoticons)(.+?)[\"'](.+?)?".">#is", "img src=\"".$this->ipsclass->vars['ipb_img_url']."style_\\1\\2\"\\3>", $img );
+		}
+		
+		//-----------------------------------------
+		// Return cookie and img
+		//-----------------------------------------
+
+        $this->return_string($cookie.$img);
+    }
+
+6. (Если у вас стоит мод Forumicons с инвизионайза(т.е. если у вас на такие иконки нельзя было нажимать, а вы хотите это сделать))
+
+В файле ./sources/classes/class_forums.php в функции forums_new_posts() найти добавленный при установке мода код
+		if($forum_data['icon']){
+			return $forum_data['last_post'] > $rtime ? "<img src=\"".$this->ipsclass->vars['board_url']."/html/forumicons/".$forum_data['icon'].".gif\">"
+	: "<img src=\"".$this->ipsclass->vars['board_url']."/html/forumicons/".$forum_data['icon']."_off.gif\">";
+		}else{
+        		return ( $forum_data['last_post'] && $forum_data['last_post'] > $rtime ) ? "<{C_ON".$sub_cat_img."}>" : "<{C_OFF".$sub_cat_img."}>";
+		}
+
+и заменить на
+
+		if($forum_data['icon']){
+            
+            return $forum_data['last_post'] > $rtime ? $this->ipsclass->compiled_templates['skin_boards']->forum_img_with_link("<img src=\"".$this->ipsclass->vars['board_url']."/html/forumicons/".$forum_data['icon'].".gif\" alt=\"Есть новые сообщения\">", $fid)
+            : "<img src=\"".$this->ipsclass->vars['board_url']."/html/forumicons/".$forum_data['icon']."_off.gif\" alt=\"Нет новых сообщений\">";
+        }else{
+            return ( $forum_data['last_post'] && $forum_data['last_post'] > $rtime ) ? "<{C_ON".$sub_cat_img."}>" : "<{C_OFF".$sub_cat_img."}>";
+        }
+
+ВСЁ!
+
+--------------------------------------------
+http://www.ibresource.ru/forums/index.php?showuser=36662
+--------------------------------------------
+sannis@mail.ru
+--------------------------------------------
