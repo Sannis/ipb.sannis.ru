@@ -1,0 +1,245 @@
+<?php
+#-----------------------------------------------------
+#-----------------------------------------------------
+# (SnS) AJAX Быстрая цитата
+#-----------------------------------------------------------
+# Для IP.Board 2.1.x
+-----------------------------------------------------
+# (C) 2007 Олег «Sannis» Ефимов, 29.04.2007
+-----------------------------------------------------
+Мод позволяет одним нажатием цитировать чей-либо
+пост целиком, включая BB-codes оформление в форму
+быстрого ответа, как при полном ответе.
+-----------------------------------------------------
+Автор не гарантирует работу данного мода на форумах
+с кодировкой, отличной от cp1251 и неверным xmlout.php.
+Также при установке вам следует иметь в виду, что мод
+не учитывает модификацию "[HIDE] BB-code".
+-----------------------------------------------------
+Объём работ:
+-----------------------------------------------------
+Файлы для изменения:
+./sources/action_public/topics.php
+./sources/action_public/xmlout.php
+
+Шаблоны для изменения:
+skin_topics->RenderRow
+skin_topics->topic_page_top
+-----------------------------------------------------
+-----------------------------------------------------
+
+1. Во всех скинах в шаблоне skin_topics->RenderRow найти:
+
+{$post['post_date']}
+		
+Добавить после:
+
+ &middot; <a href="{$this->ipsclass->base_url}act=Post&amp;CODE=02&amp;f={$this->ipsclass->input['f']}&amp;t={$this->ipsclass->input['t']}&amp;qpid={$post['pid']}" onclick="return ajax_quick_quote('{$post['pid']}');">{$this->ipsclass->lang['ajax_quick_quote']}</a>
+
+
+2. Во всех скинах в шаблоне skin_topics->topic_page_top найти:
+
+	<script type="text/javascript" src="jscripts/ipb_topic.js"></script>
+		
+Добавить после
+
+	<script type="text/javascript" src="jscripts/sns_ajax_quick_quote.js"></script>
+
+
+3. Загрузить содержимое папки uploads на сервер.
+
+4. Открыть ./cache/lang_cache/имя_языка/lang_topic.php, добавить в массив:
+
+'ajax_quick_quote'		=> "Быстрая цитата",
+
+Проделать для всех языков на форуме.
+
+	
+5. Открыть ./sources/action_public/xmlout.php
+
+Найти
+
+		case 'post-edit-save':
+        		$this->post_edit_save();
+        		break;
+		
+Добавить после
+
+    		// (SnS) AJAX Quick Quote
+		case 'get-post-quickquote':
+        		$this->get_post_quickquote();
+        		break;
+
+		
+Найти
+
+	/*-------------------------------------------------------------------------*/
+	// DST Auto correction
+	/*-------------------------------------------------------------------------*/
+	
+Добавить перед
+
+
+	/*-----------------------------------------------------------*/
+	// AJAX QuickQuote Mod for 2.1.x by Sannis
+	/*-----------------------------------------------------------*/
+	// 29 April 2007 - 30 January 2010
+	/*-----------------------------------------------------------*/
+
+	function get_post_quickquote()
+	{
+		//-----------------------------------------
+		// INIT
+		//-----------------------------------------
+
+		$pid = intval( $_REQUEST['p'] );
+		$fid = intval( $_REQUEST['f'] );
+		$tid = intval( $_REQUEST['t'] );
+
+		//-----------------------------------------
+		// Check P|T|FID
+		//-----------------------------------------
+
+		if ( ! $pid OR ! $tid OR ! $fid )
+		{
+			$this->return_string("error");
+			exit();
+		}
+
+		//-----------------------------------------
+		// Get topic
+		//-----------------------------------------
+
+		$topic = $this->ipsclass->DB->build_and_exec_query( array( 'select' => '*', 'from' => "topics", 'where' => 'tid='.$tid ) );
+
+		//-----------------------------------------
+		// Got permission?
+		//-----------------------------------------
+
+		if ( ( $topic['state'] != 'open' ) and ( ! $this->ipsclass->member['g_is_supmod'] ) )
+		{
+			if ( $this->ipsclass->member['g_post_closed'] != 1 )
+			{
+				$this->return_string("nopermission");
+				exit();
+			}
+		}
+
+		if ( $this->ipsclass->check_perms( $this->ipsclass->forums->forum_by_id[ $fid ]['reply_perms'] ) == FALSE )
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		if ( $this->ipsclass->forums->forum_by_id[ $fid ]['status'] == 0 )
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		//-----------------------------------------
+		// Get post
+		//-----------------------------------------
+
+		require_once( ROOT_PATH."sources/classes/post/class_post.php" );
+		require_once( ROOT_PATH."sources/classes/post/class_post_edit.php" );
+
+		$post           =  new post_functions();
+		$post->ipsclass =& $this->ipsclass;
+		$post->forum    =  $this->ipsclass->forums->forum_by_id[ $fid ];
+		$post->load_classes();
+		$post->build_permissions();
+
+		//-----------------------------------------
+		// Lets load the topic from the database before we do anything else.
+		//-----------------------------------------
+
+		$this->ipsclass->DB->simple_construct( array( 'select' => '*', 'from' => 'topics', 'where' => "tid=".intval($this->ipsclass->input['t']) ) );
+		$this->ipsclass->DB->simple_exec();
+
+		$post->topic = $this->ipsclass->DB->fetch_row();
+
+		//-----------------------------------------
+		// Is it legitimate?
+		//-----------------------------------------
+
+		if ( ! $post->topic['tid'] )
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		//-----------------------------------------
+		// Load the old post
+		//-----------------------------------------
+
+		$this->ipsclass->DB->simple_construct( array( 'select' => '*', 'from' => 'posts', 'where' => "pid=".intval($this->ipsclass->input['p']) ) );
+		$this->ipsclass->DB->simple_exec();
+
+		$post->orig_post = $this->ipsclass->DB->fetch_row();
+
+		if (! $post->orig_post['pid'])
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		//-----------------------------------------
+		// Same topic?
+		//-----------------------------------------
+
+		if ( $post->orig_post['topic_id'] != $post->topic['tid'] )
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		//-----------------------------------------
+		// check
+		//-----------------------------------------
+
+		if ( ! $post->orig_post['post'] OR ! $post->topic['tid'] )
+		{
+			$this->return_string("nopermission");
+			exit();
+		}
+
+		//-----------------------------------------
+		// Convert and return plain text
+		//-----------------------------------------
+
+		$bbtext = $post->parser->pre_edit_parse( $post->orig_post['post'] );
+
+		if ( $this->ipsclass->vars['strip_quotes'] )
+		{
+			$bbtext = trim($post->_recursive_kill_quotes( $bbtext ) );
+		}
+
+		// Fix IE bug
+		$bbtext = str_replace( "&sect", "&amp;sect", $bbtext );
+
+		$raw_text = "[quote name='".$post->parser->make_quote_safe($post->orig_post['author_name'])."' date='".$post->parser->make_quote_safe($this->ipsclass->get_date($post->orig_post['post_date'], 'LONG', 1))."' post='{$post->orig_post['pid']}']\n{$bbtext}\n[/quote]\n";
+
+		$this->return_string($raw_text);
+		exit();
+	}
+
+
+ВСЁ!
+
+ПРИМЕЧАНИЕ:
+Если у вас наблюдаются проблемы с выводом кодировки при цитировании русских постов, проверьте,
+что функция return_string($string) в файле ./sources/action_public/xmlout.php имеет сл. вид:
+
+    function return_string($string)
+    {
+    	@header( "Content-type: text/plain;charset={$this->ipsclass->vars['gb_char_set']}" );
+    	$this->print_nocache_headers();
+    	print $string;
+    	exit();
+    }
+
+--------------------------------------------
+Олег «Sannis» Ефимов:
+http://sannis.ru
+--------------------------------------------
