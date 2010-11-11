@@ -1,0 +1,28 @@
+CREATE TABLE `ibf_trivia` (
+  `id` mediumint(8) NOT NULL auto_increment,
+  `question` mediumtext,
+  `date` varchar(13) NOT NULL default '0',
+  `answer` mediumtext,
+  `open` tinyint(1) NOT NULL default '0',
+  `hidden_by` mediumint(8) NOT NULL default '0',
+  `hidden_on` varchar(13) NOT NULL default '0',
+  `served` mediumint(8) NOT NULL default '0',
+  `correct` mediumint(8) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;
+
+
+CREATE TABLE `ibf_trivia_sessions` (
+  `tsid` varchar(32) NOT NULL default '0',
+  `mid` mediumint(8) NOT NULL default '0',
+  `mname` varchar(75) NOT NULL default 'Guest',
+  `trivia_served` mediumint(8) NOT NULL default '0',
+  `trivia_correct` mediumint(8) NOT NULL default '0',
+  `trivia_incorrect` mediumint(8) NOT NULL default '0',
+  `session_start` varchar(13) NOT NULL default '0',
+  `session_activity` varchar(13) NOT NULL default '0',
+  `session_end` varchar(13) NOT NULL default '0',
+  `current` tinyint(1) NOT NULL default '0',
+  `mostcorrect` mediumint(8) NOT NULL default '0',
+  `currentcorrect` mediumint(8) NOT NULL default '0'
+) TYPE=MyISAM;

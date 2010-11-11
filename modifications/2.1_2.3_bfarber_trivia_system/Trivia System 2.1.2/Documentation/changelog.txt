@@ -1,0 +1,24 @@
+
+
+7/11/2005 @ 12:22 PM EST  Brandon Farber <brandon.farber@gmail.com>
+Version 2.0.3
+  * Fixed the upload trivia pack function (was not working)
+
+
+7/10/2005 @ 9:56 AM EST  Brandon Farber <brandon.farber@gmail.com>
+Version 2.0.2
+  * Added code to trim answer (to account for extra spaces)
+  * Added code to fix the incorrect answer when it's correct.
+
+
+7/9/2005 @ 5:52 PM EST  Brandon Farber <brandon.farber@gmail.com>
+Version 2.0.1
+  * Fixed bug with stripping slashes around quote marks in ACP when editing settings
+    (in the message box)
+  * Changed most questions served to most correct total box
+
+
+7/8/2005 @ 2:14 PM EST  Brandon Farber <brandon.farber@gmail.com>
+Version 2.0.0
+  * Initial Release!
+

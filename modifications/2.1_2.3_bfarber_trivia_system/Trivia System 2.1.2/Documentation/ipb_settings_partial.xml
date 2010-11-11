@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<settingexport exported="1178634348">
+	<settinggroup>
+		<setting>
+			<conf_id>266</conf_id>
+			<conf_title>Права доступа гостям</conf_title>
+			<conf_description>Выберите, насколько гости могут пользоваться Викториной</conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>dropdown</conf_type>
+			<conf_key>t_guests_view</conf_key>
+			<conf_value></conf_value>
+			<conf_default>all</conf_default>
+			<conf_extra>all=Разрешить просмотр статистики и отвечать на вопросы
+stats=Разрешить просмотр статистики Викторины
+no=Запретить доступ к Викторине</conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>1</conf_position>
+			<conf_start_group>Настройки пользовательской части</conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>260</conf_id>
+			<conf_title>Время, отпускаемое на ответ</conf_title>
+			<conf_description>Оставьте пустым или введите 0 для отсутствия ограничения</conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>input</conf_type>
+			<conf_key>t_time_restrict</conf_key>
+			<conf_value></conf_value>
+			<conf_default>0</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>2</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>261</conf_id>
+			<conf_title>Позволять участникам форума покидать Викторину и впоследствии возращаться к незаконченной игре?</conf_title>
+			<conf_description></conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>yes_no</conf_type>
+			<conf_key>t_resume</conf_key>
+			<conf_value></conf_value>
+			<conf_default>1</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>3</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>267</conf_id>
+			<conf_title>Разрешить отвечать на вопрос только один раз?</conf_title>
+			<conf_description><![CDATA[Если вы установите 'Да', то участнику Викторины будут задаваться уникальные вопросы, вопросы, на которые он отвечал(даже если неверно) не будут больше попадаться.]]></conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>yes_no</conf_type>
+			<conf_key>t_answer_once</conf_key>
+			<conf_value></conf_value>
+			<conf_default>1</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>4</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>262</conf_id>
+			<conf_title>Время жизни сессии Викторины</conf_title>
+			<conf_description>По прошествии этого времени текущая игра автоматически завершится. Оставьте пустым или введите 0 для отсутствия ограничения</conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>input</conf_type>
+			<conf_key>t_sess_cutoff</conf_key>
+			<conf_value></conf_value>
+			<conf_default>0</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>5</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>263</conf_id>
+			<conf_title>Текст приветствия на главной странице Викторины</conf_title>
+			<conf_description>Разрешен HTML, BB-коды и смайлы</conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>textarea</conf_type>
+			<conf_key>t_welcome_message</conf_key>
+			<conf_value></conf_value>
+			<conf_default><![CDATA[Добро пожаловать в Викторину! Вы можете начать игру где вы будете отвечать на вопросы Викторины. Для завершения игры нажмите "Завершить игру". На этой странице вы сможете просмотреть достижения участников форума в Викторине.]]></conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>6</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>1</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>265</conf_id>
+			<conf_title>Разрешить добавление вопросов участниками форума?</conf_title>
+			<conf_description></conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>yes_no</conf_type>
+			<conf_key>t_allow_add_questions</conf_key>
+			<conf_value></conf_value>
+			<conf_default>1</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>7</conf_position>
+			<conf_start_group>Настройки модерирования</conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>264</conf_id>
+			<conf_title>Список модераторов</conf_title>
+			<conf_description>Введите через запятую список id участников, которым разрешено модерировать вопросы на форуме</conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>input</conf_type>
+			<conf_key>t_mod_list</conf_key>
+			<conf_value></conf_value>
+			<conf_default></conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>8</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>1</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_is_title>1</conf_is_title>
+			<conf_title_keyword>triviasettings</conf_title_keyword>
+			<conf_title_title>Настройки Викторины</conf_title_title>
+			<conf_title_desc>Эти настройки управляют Викториной на вашем форуме</conf_title_desc>
+			<conf_title_noshow>0</conf_title_noshow>
+		</setting>
+	</settinggroup>
+
+</settingexport>

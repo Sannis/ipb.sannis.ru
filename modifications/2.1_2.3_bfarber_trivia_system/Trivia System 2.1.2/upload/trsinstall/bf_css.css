@@ -1,0 +1,147 @@
+html {
+	overflow-x: auto;
+}
+body {
+	font-size: 10px;
+	font-family: Verdana, Tahoma;
+	color: #FFFFFF;
+	margin: 0px;
+	padding: 0px;
+}
+		          	
+table,tr,td { 
+	font-family: Verdana, Tahoma;
+	font-size: 10px; 
+	color: #FFFFFF; 
+	text-align: left; 
+	padding: 4px; 
+}
+
+h3 { 
+	font-size: 14px; 
+}
+					
+a:link, a:visited, a:active { 
+	color: #FFFFFF; 
+	text-decoration: underline;
+}
+a:hover { 
+	color: #7BA4CF; 
+	text-decoration: underline; 
+}
+	
+#copy { 
+	font-size: 10px; 
+}
+
+#logostrip {
+	padding: 0px;
+	margin: 0px;
+	font-size: 28px;
+	font-weight: bold;
+}
+				
+.centerbox { 
+	margin-right: 10%;
+	margin-left: 10%;
+	text-align: left; 
+}
+					
+.warnbox {
+	border: 1px solid #3B5D8D;
+	background: #7BA4CF;
+	padding: 6px;
+	margin-right: 10%;
+	margin-left: 10%;
+	text-align: left;
+}
+					
+.tablepad { 
+	background-color: #222021;
+	padding: 6px;
+	border: 1px solid #FFF; 
+}
+
+.mainborder { 
+	border: 2px solid #FFF; 
+}
+
+.tableborder { 
+	border: 1px solid #345487;
+	background-color: #FFF; 
+	padding: 0px; 
+	margin: 0px; 
+	width: 100%;
+}
+
+.pformstrip { 
+	background-color: #D1DCEB; 
+	color: #3A4F6C;
+	font-weight: bold;
+	padding: 7px;
+	margin-top: 1px;
+	text-align: left;
+}
+.pformleftw { 
+	background-color: #F5F9FD; 
+	padding: 6px; 
+	margin-top: 1px;
+	width: 40%; 
+	border-top: 1px solid #C2CFDF; 
+	border-right: 1px solid #C2CFDF; 
+}
+.pformright { 
+	background-color: #F5F9FD; 
+	padding: 6px; 
+	margin-top: 1px;
+	border-top: 1px solid #C2CFDF; 
+}
+
+.maintitle { 
+	text-align: left;
+	vertical-align: middle;
+	font-weight: bold; 
+	color: #FFF; 
+	letter-spacing: 1px; 
+	padding: 8px 0px 8px 5px; 
+	background-color: #222021;
+	border: 1px solid #FFF;
+}
+.maintitle a:link,
+.maintitle a:visited,
+.maintitle a:active { 
+	text-decoration: none; 
+	color: #FFF;
+}
+.maintitle a:hover { 
+	text-decoration: underline;
+}
+					
+#button { 
+	background-color: #4C77B6; 
+	color: #FFFFFF; 
+	font-family: Verdana, Arial; 
+	font-size: 10px;
+}
+					
+#textinput { 
+	background-color: #EEEEEE; 
+	color: #000000; 
+	font-family: Verdana, Arial; 
+	font-size: 10px; 
+	width: 100%;
+}
+					
+#dropdown { 
+	background-color: #EEEEEE; 
+	color:#000000; 
+	font-family: Verdana, Arial; 
+	font-size: 10px;
+}
+					
+#multitext { 
+	background-color: #EEEEEE; 
+	color: #000000; 
+	font-family: Courier, Verdana, Arial; 
+	font-size:10px;
+}
