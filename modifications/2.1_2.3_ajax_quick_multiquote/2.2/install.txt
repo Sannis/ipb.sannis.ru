@@ -1,0 +1,186 @@
+-----------------------------------------------------
+(SnS) AJAX Quick MultiQuote Mod for 2.3.x
+-----------------------------------------------------
+Автор: Олег «Sannis» Ефимов, контакты в конце описания
+-----------------------------------------------------
+Релиз 1.1
+(c) 2007‒2010 Sannis
+-----------------------------------------------------
+Для Invision Power Board 2.3.x.
+-----------------------------------------------------
+Мод позволяет использовать возможность мультицитаты
+(+/- Quote) в форме быстрого ответа.
+-----------------------------------------------------
+Автор не гарантирует работу данного мода на форумах
+с кодировкой, отличной от cp1251 и "левым" xmlout.php.
+Также при установке вам следует иметь в виду, что мод
+может не учесть модификации, связанные с BB-кодами,
+если они написаны с изменениями файла class_post.php
+-----------------------------------------------------
+Объём работ:
+-----------------------------------------------------
+Файлы для изменения:
+./sources/action_public/xmlout.php
+
+Шаблоны для изменения:
+skin_topics->topic_page_top
+skin_topics->quick_reply_box_open
+-----------------------------------------------------
+-----------------------------------------------------
+
+1. Во всех скинах в шаблоне skin_topics->topic_page_top найти:
+
+    <script type="text/javascript" src="jscripts/ipb_topic.js"></script>
+
+Добавить после
+
+    <script type="text/javascript" src="jscripts/sns_quick_multi_quote.js"></script>
+
+
+2. Во всех скинах в шаблоне skin_topics->quick_reply_box_open найти:
+
+    <input type="checkbox" name="enablesig" value="yes" class="checkbox" checked="checked" />&nbsp;{ipb.lang['qr_add_sig']}
+
+Добавить после
+
+     &#124; <a href="javascript:ajax_quick_multi_quote();">Цитировать отмеченные</a>
+
+
+3. Загрузить содержимое папки uploads на сервер.
+
+
+4. Открыть ./sources/action_public/xmlout.php
+
+Найти
+
+            case 'post-edit-save':
+                $this->post_edit_save();
+                break;
+
+Добавить после
+
+        case 'get-quickmultiquote':
+            $this->get_quickmultiquote();
+            break;
+
+
+Найти
+
+    /*-------------------------------------------------------------------------*/
+    // DST Auto correction
+    /*-------------------------------------------------------------------------*/
+    
+Добавить перед
+
+    /*-----------------------------------------------------------*/
+    // Quick MultiQuote Mod for 2.3.x by Sannis
+    /*-----------------------------------------------------------*/
+    
+    function get_quickmultiquote()
+    {
+        $fid = intval( $_REQUEST['f'] );
+        $tid = intval( $_REQUEST['t'] );
+
+        //-----------------------------------------
+        // Check T|FID
+        //-----------------------------------------
+
+        if ( !$tid OR !$fid )
+        {
+            $this->return_string("error");
+            exit();
+        }
+
+        //-----------------------------------------
+        // Load and config the post class
+        //-----------------------------------------
+
+        require_once( ROOT_PATH . 'sources/classes/post/class_post.php' );
+
+        $this->class_post             =  new class_post();
+        $this->class_post->ipsclass   =& $this->ipsclass;
+        $this->class_post->forum      =  $this->ipsclass->forums->forum_by_id[ $fid ];
+        $this->class_post->md5_check  = $this->md5_check;
+        $this->class_post->obj        = $this->obj;
+        $this->class_post->modules    = $this->modules;
+
+        $this->class_post->load_classes();
+        $this->class_post->build_permissions();
+
+        // Start -->
+
+        $raw_post = '';
+
+        if ( !$this->ipsclass->input['qpid'] )
+        {
+            $this->ipsclass->input['qpid'] = $this->ipsclass->my_getcookie('mqtids');
+
+            if ($this->ipsclass->input['qpid'] == ",")
+            {
+                $this->ipsclass->input['qpid'] = "";
+            }
+        }
+
+        $this->ipsclass->input['qpid'] = preg_replace( "/[^,\d]/", "", trim($this->ipsclass->input['qpid']) );
+
+        if ( $this->ipsclass->input['qpid'] )
+        {
+            $this->class_post->quoted_pids = preg_split( '/,/', $this->ipsclass->input['qpid'], -1, PREG_SPLIT_NO_EMPTY );
+            
+            //-----------------------------------------
+            // Get the posts from the DB and ensure we have
+            // suitable read permissions to quote them
+            //-----------------------------------------
+            
+            if ( count($this->class_post->quoted_pids) )
+            {
+                $this->ipsclass->DB->cache_add_query( 'post_get_quoted', array( 'quoted_pids' => $this->class_post->quoted_pids ) );
+                $this->ipsclass->DB->cache_exec_query();
+            
+                while ( $tp = $this->ipsclass->DB->fetch_row() )
+                {
+                    if ( $this->ipsclass->check_perms( $this->ipsclass->forums->forum_by_id[ $tp['forum_id'] ]['read_perms']) == TRUE )
+                    {
+                        $tmp_post = trim( $this->class_post->parser->pre_edit_parse( $tp['post'] ) );
+
+                        if ( $this->ipsclass->vars['strip_quotes'] )
+                        {
+                            $tmp_post = trim($this->class_post->_recursive_kill_quotes( $tmp_post ) );
+                        }
+                    
+                        $extra = "";
+                    
+                        if ( $tmp_post )
+                        {
+                            $raw_post .= "[quote name='".$this->class_post->parser->make_quote_safe($tp['author_name'])."' date='".$this->class_post->parser->make_quote_safe($this->ipsclass->get_date( $tp['post_date'], 'LONG', 1 ))."' post='".$tp['pid']."']\n$tmp_post\n".$extra.'[/quote]'."\n";
+                        }
+                    }
+                }
+            
+                $raw_post = trim($raw_post)."\n";
+            }
+        }
+
+        $this->return_string($raw_post);
+    }
+
+
+ВСЁ!
+
+ПРИМЕЧАНИЕ:
+Если у вас наблюдаются проблемы с кодировкой при цитировании русских постов, проверьте,
+что функция return_string($string) в файле ./sources/ips_kernel/class_ajax.php имеет сл. вид:
+
+    function return_string($string)
+    {
+        @header( "Content-type: text/plain;charset={$this->ipsclass->vars['gb_char_set']}" );
+        $this->print_nocache_headers();
+        print $string;
+        exit();
+    }
+
+--------------------------------------------
+Олег «Sannis» Ефимов:
+http://sannis.ru
+http://www.ibresource.ru/forums/index.php?showuser=36662
+--------------------------------------------
