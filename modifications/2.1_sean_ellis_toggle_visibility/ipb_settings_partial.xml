@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<settingexport exported="1178963946">
+	<settinggroup>
+		<setting>
+			<conf_id>326</conf_id>
+			<conf_title>Включить модификацию?</conf_title>
+			<conf_description><![CDATA[Выберите "Да" для включения модификации...]]></conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>yes_no</conf_type>
+			<conf_key>se_togvis_on</conf_key>
+			<conf_value></conf_value>
+			<conf_default>1</conf_default>
+			<conf_extra></conf_extra>
+			<conf_evalphp></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>1</conf_position>
+			<conf_start_group>Настройка</conf_start_group>
+			<conf_end_group>0</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>se_toggle_visibility</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_id>327</conf_id>
+			<conf_title>Настройка прав для групп</conf_title>
+			<conf_description><![CDATA[Выберите группу(ы) у которых будет доступна данная опция<br /><br />Вы можете использовать Ctrl для выделения нескольких групп.]]></conf_description>
+			<conf_group>30</conf_group>
+			<conf_type>multi</conf_type>
+			<conf_key>se_view_togvis</conf_key>
+			<conf_value></conf_value>
+			<conf_default>null</conf_default>
+			<conf_extra>#show_groups#</conf_extra>
+			<conf_evalphp><![CDATA[if ( $save == 1)
+{
+    if ( is_array($_POST['se_view_togvis']) )
+    {
+        $_POST['se_view_togvis'] = implode(",",$_POST['se_view_togvis']);
+    }
+    else
+    {
+        $_POST['se_view_togvis'] = "";
+    }
+    
+    $key = 'se_view_togvis';
+}
+if ( $show == 1 )
+{
+    $key = 'se_view_togvis[]';
+}]]></conf_evalphp>
+			<conf_protected>0</conf_protected>
+			<conf_position>2</conf_position>
+			<conf_start_group></conf_start_group>
+			<conf_end_group>1</conf_end_group>
+			<conf_help_key></conf_help_key>
+			<conf_add_cache>1</conf_add_cache>
+			<conf_title_keyword>se_toggle_visibility</conf_title_keyword>
+		</setting>
+
+		<setting>
+			<conf_is_title>1</conf_is_title>
+			<conf_title_keyword>se_toggle_visibility</conf_title_keyword>
+			<conf_title_title>SE22-Toggle Visibility</conf_title_title>
+			<conf_title_desc>Настройка SE22-Toggle Visibility</conf_title_desc>
+			<conf_title_noshow>0</conf_title_noshow>
+		</setting>
+	</settinggroup>
+
+</settingexport>

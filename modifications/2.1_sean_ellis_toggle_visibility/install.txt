@@ -1,0 +1,128 @@
+---------------------------------------------------------------
+---------------------------------------------------------------
+SE22-Toggle Visibility для IPB 2.1.x
+---------------------------------------------------------------
+SE22-Toggle Visibility 1.0 - Sean Ellis
+Портирование на IPB 2.1.x и русский перевод - Sannis
+---------------------------------------------------------------
+---------------------------------------------------------------
+
+
+1. Открыть: sources/action_public/login.php
+
+Найти:
+
+    case 'autologin': $this->auto_login(); break;
+
+Добавить после:
+
+    case 'se_togvis': $this->se_togvis(); break;
+
+Найти:
+
+    $this->ipsclass->print->do_output( array( 'TITLE' => $this->page_title, 'JS' => 0, 'NAV' => $this->nav ) ); }
+
+Добавить после:
+
+    //-----------------------------------------
+    // SE22-Toggle Visibility
+    // Written for IPB 2.2 by Sean Ellis
+    // Port to IPB 2.1 by Sannis
+    //-----------------------------------------
+    
+    function se_togvis()
+    {
+        if( intval( $this->ipsclass->vars['se_togvis_on'] == 1 && in_array( $this->ipsclass->member['mgroup'], explode( ",", $this->ipsclass->vars['se_view_togvis'] ) ) && $this->ipsclass->vars['disable_anonymous'] != 1 ) )
+        {        
+            if( $this->ipsclass->input['k'] != $this->ipsclass->md5_check )
+            {
+                $this->ipsclass->Error( array( 'MSG' => 'no_permission' ) );
+            }
+            
+            $referer = array();
+            
+            if ( is_array( $_SERVER ) AND count( $_SERVER ) )
+            {
+                if( isset( $_SERVER['HTTP_REFERER'] ) )
+                {
+                    $referer = $_SERVER['HTTP_REFERER'];
+                }
+            }
+            
+            if ( !$referer )
+            {
+                $referer = getenv('HTTP_REFERER');
+            }
+            
+            if( $this->ipsclass->member['login_anonymous'] == '0&1' )
+            {
+                $this->ipsclass->DB->do_update( 'members', array( 'login_anonymous' => '1&1' ), 'id='.$this->ipsclass->member['id'] );
+            }
+            
+            else if( $this->ipsclass->member['login_anonymous'] == '1&1' )
+            {
+                $this->ipsclass->DB->do_update( 'members', array( 'login_anonymous' => '0&1' ), 'id='.$this->ipsclass->member['id'] );
+            }
+            
+            else
+            {
+                $this->ipsclass->DB->do_update( 'members', array( 'login_anonymous' => '1&1' ), 'id='.$this->ipsclass->member['id'] );
+            }
+            
+            $this->ipsclass->print->redirect_screen( $this->ipsclass->lang['se_togvis_msg'], str_replace( $this->ipsclass->base_url, "", $referer ) );
+        }
+        
+        else
+        {
+            $this->ipsclass->error( array( 'MSG' => 'no_permission' ) );
+        }
+    }
+
+
+2. Открыть: sources/classes/class_display.php
+
+Найти:
+    //-----------------------------------------
+    // Build the members bar
+    //-----------------------------------------
+
+Добавить после:
+
+        $this->ipsclass->member['can_use_togvis'] = in_array( $this->ipsclass->member['mgroup'], explode( ",", $this->ipsclass->vars['se_view_togvis'] ) );
+
+
+3. Шаблон для редактирования: ВНЕШНИЙ ВИД » [Меню стиля] » Изменить HTML фрагменты » skin_global (Основные HTML фрагменты) » member_bar
+В английской версии: Look & Feel » [Select Skin] » Edit Template HTML » All Global HTML » member_bar
+
+Найти:
+<if="ipb.member['mgroup'] == ipb.vars['auth_group']">
+<b><a href="{ipb.script_url}act=reg&CODE=reval">{ipb.lang['resend_val']}</a></b> ·
+</if>
+
+Добавить перед:
+<if="ipb.vars['se_togvis_on'] == '1' and ipb.member['can_use_togvis'] and ipb.vars['disable_anonymous'] != '1'">
+( <a href="{$this->ipsclass->base_url}act=Login&CODE=se_togvis&k={$this->ipsclass->md5_check}">{$this->ipsclass->lang['se_togvis']}</a> ) · 
+</if>
+
+Не забудьте произвести изменения во ВСЕХ скинах!
+
+
+4. Открыть файл ./cache/lang_cache/*/lang_global.php
+
+После
+
+$lang = array (
+
+Добавить
+
+//SE22-Toggle Visibility
+'se_togvis'            => "Изменить видимость",
+'se_togvis_msg'            => "Ваша видимость успешно изменена.",
+
+
+5.Зайти в Админцентр -> Настройки, внизу страницы выбрать диалог загрузки файлов настройки
+и импортировать файл ipb_settings_partial.xml.
+
+
+6. Настройка модификации
+Наконец-то основная работа позади. Остаётся только зайти в Админцентр -> Настройки и настроить права для использования модификации в группе настроек "SE22-Toggle Visibility"! 
