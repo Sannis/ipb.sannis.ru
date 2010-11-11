@@ -31,7 +31,7 @@ skin_boards->subforum_img_with_link
 ----------------------------------------------------
 ----------------------------------------------------
 
-1. Скопировать файл sns_ajax_mark_forum.js в папку ./jscripts/
+1. Загрузить содержимое папки uploads на сервер.
 
 2. Заменить содержимое шаблона skin_boards->forum_img_with_link на:
 
@@ -229,7 +229,6 @@ skin_boards->subforum_img_with_link
 ВСЁ!
 
 --------------------------------------------
-http://www.ibresource.ru/forums/index.php?showuser=36662
---------------------------------------------
-sannis@mail.ru
+Олег «Sannis» Ефимов:
+http://sannis.ru
 --------------------------------------------
