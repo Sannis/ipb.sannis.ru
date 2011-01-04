@@ -1,0 +1,447 @@
+<?php
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+# (SnS) SSI экспорт последних тем и сообщений
+#-------------------------------------------------------------
+# Для IP.Board 2.1.x, 2.2.x, 2.3.x
+#-------------------------------------------------------------
+# (C) 2007 Ronaldo (bad work on 2.0)
+# (C) 2007 Олег «Sannis» Ефимов, (ports to 2.1 and extend mod)
+# (C) 2009 Олег «Sannis» Ефимов, 19.5.2008 - 0:02
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+#                         ОПИСАНИЕ:
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+# Этот мод позволяет улучшить функциональность ssi.php,
+# в него добавлены запросы вывода последних созданных тем и последних ответов,
+# поддерживается вывод аватаров и ограничение длины выводимых сообщений.
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+# Объём работ:
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+# Файлы для изменения:
+#  - ./ssi.php
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+#                         ЗАПРОСЫ:
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+а) Последние созданные темы: include("http://domain.com/forums/ssi.php?a=lasttopics");
+б) Последние ответы: include("http://domain.com/forums/ssi.php?a=lastposts");
+
+К запросам можно применить определение количества записей в списке через параметр show:
+include("http://domain.com/forums/ssi.php?a=lastposts&show=10");
+
+Выбрать форумы, из которых будет осуществляться экспорт
+(при этом доступ к форумам из $disable_forums разумеется получен не буден):
+include("http://domain.com/forums/ssi.php?a=lastposts&show=10&f=4,12,20");
+
+А также обрезать сообщение по длине:
+include("http://domain.com/forums/ssi.php?a=lasttopics&len=200");
+
+При выводе последних сообщений можно отключить вывод сообщений начинающих темы:
+include("http://domain.com/forums/ssi.php?a=lastposts&notopics=1");
+
+Также можно уменьшить размер аватара используя параметр asize:
+include("http://domain.com/forums/ssi.php?a=lasttopics&asize=50");
+
+Вывести последние ответы в определённой теме:
+include("http://domain.com/forums/ssi.php?a=lastposts&show=5&topic=485");
+
+И вывести перед постами информацию о теме:
+include("http://domain.com/forums/ssi.php?a=lastposts&show=5&topic=485&showtopicinfo=1");
+
+Закрытые форумы  из которых не должны экспортироваться сообщения задаются
+в переменной $disable_forums. Она представляет из себя массив id закрытых форумов,
+пример определения смотрите в начале пункта 1 установки.
+
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+#                         УСТАНОВКА
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+0. Сделать бекап файлов, которые будут изменены во время установки.
+   На всякий случай. Список смотреть выше.
+   
+	Чтобы ssi работал, в php.ini нужно разрешить:
+		allow_url_fopen 
+		allow_url_include
+
+1. Открыть файл ./ssi.php. Найти код:
+
+class ssi_autorun
+{
+
+После добавить:
+
+	var $disable_forums = array( 4, 35, 39, 14 );
+
+Подправьте эту строку под свои нужды, или удалите список номеров между скобками.
+	
+Найти код:
+
+	switch ($this->ipsclass->input['a'])
+	{
+		case 'news':
+			$this->do_news();
+			break;
+
+После добавить:
+
+		case 'lasttopics':
+			$this->do_last_topics();
+			break;
+
+		case 'lastposts':
+			$this->do_last_posts();
+			break;
+
+Найти код:
+
+	/**
+	* Do News
+	*
+	* Show news text
+	*/
+	function do_news()
+	{
+
+Добавить перед:
+
+	/**
+	* Do Last Topics
+	*
+	* Show last topics
+	*/
+	function do_last_topics()
+	{
+		$this->ipsclass->load_language("lang_global");
+
+		require_once( ROOT_PATH."sources/handlers/han_parse_bbcode.php" );
+		$parser                      =  new parse_bbcode();
+		$parser->ipsclass            =& $this->ipsclass;
+		$parser->allow_update_caches = 0;
+
+		$perpage = intval($this->ipsclass->input['show']) > 0 ? intval($this->ipsclass->input['show']) : 10;
+
+		$perpage = ( $perpage > SSI_MAX_SHOW ) ? SSI_MAX_SHOW : $perpage;
+
+		$template = $this->load_template("last_topics.html");
+
+		$to_echo = '';
+
+		if( count($this->disable_forums) > 0 )
+		{
+			$exclforums = "t.forum_id NOT IN (".implode(',', $this->disable_forums).") AND ";
+		}
+		
+		// Sort out the forum ids
+		if( isset($this->ipsclass->input['f']) && $this->ipsclass->input['f'] ) {
+			$forums = $this->ipsclass->clean_int_array( explode( ",", $this->ipsclass->input['f'] ) );
+		
+			if( count($forums) > 0 )
+			{
+				$exclforums .= "t.forum_id IN (".implode(',', $forums).") AND ";
+			}
+		}
+
+		$this->ipsclass->DB->build_query( array( 'select'   => 't.*',
+							 'from'     => array( 'topics' => 't' ),
+							 'where'    => $exclforums."t.approved=1 AND t.state != 'closed' AND (t.moved_to is null or t.moved_to = '') AND t.starter_id <> 0",
+							 'order'    => 't.start_date DESC',
+							 'limit'    => array( 0, $perpage ),
+							 'add_join' => array( 0 => array( 'select' => 'm.members_display_name as member_name, m.id as member_id, m.title as member_title',
+															  'from'   => array( 'members' => 'm' ),
+															  'where'  => "m.id=t.starter_id",
+															  'type'   => 'left' ),
+												  1 => array( 'select' => 'me.avatar_location, me.avatar_size, me.avatar_type',
+															  'from'   => array( 'member_extra' => 'me' ),
+															  'where'  => "me.id=t.starter_id",
+															  'type'   => 'left' ),
+												  2 => array( 'select' => 'p.*',
+															  'from'   => array( 'posts' => 'p' ),
+															  'where'  => "t.topic_firstpost=p.pid",
+															  'type'   => 'left' )  )
+					)      );
+		
+		$sql_result = $this->ipsclass->DB->exec_query();
+
+		if ( ! $this->ipsclass->DB->get_num_rows($sql_result) )
+		{
+			fatal_error("Could not get the information from the database");
+		}
+
+
+		$newsize = (intval($this->ipsclass->input['asize']) > 0) ? intval($this->ipsclass->input['asize']) : 0;
+		$len = (intval($this->ipsclass->input['len']) > 0) ? intval($this->ipsclass->input['len']) : 0;
+
+		while ( $row = $this->ipsclass->DB->fetch_row($sql_result) )
+		{
+			$parser->parse_html  = ( $this->ipsclass->cache['forum_cache'][ $row['forum_id'] ]['use_html'] and $this->ipsclass->cache['group_cache'][ $row['mgroup'] ]['g_dohtml'] and $row['post_htmlstate'] ) ? 1 : 0;
+			$parser->parse_nl2br = $row['post_htmlstate'] == 2 ? 1 : 0;
+			$parser->parse_wordwrap = $this->ipsclass->vars['post_wordwrap'];
+			$parser->parse_smilies = 0;
+
+			$row['post']         = $parser->pre_display_parse( $row['post'] );
+			$row['member_name']  = $row['member_name'] ? $row['member_name'] : $row['author_name'];
+			$row['member_avatar'] = $this->ipsclass->get_avatar( $row['avatar_location'], 1, $row['avatar_size'], $row['avatar_type'] );
+
+			if( $newsize )
+			{
+				$row['member_avatar'] = preg_replace("#width='(\d+)'#is", "width='$newsize'", $row['member_avatar']);
+				$row['member_avatar'] = preg_replace("#height='(\d+)'#is", "height='$newsize'", $row['member_avatar']);
+			}
+
+			$row['post'] = $parser->strip_all_tags( $row['post'] );
+			$row['post'] = preg_replace("#([^\s<>'\"/\.\\-\?&\n\r\%]{80})#i", " \\1"."<br />", $row['post']);
+			$row['post'] = str_replace( "\n", "<br \>", trim($row['post']) );
+			if( $len and (strlen( $row['post'] ) > $len) )
+			{
+				$row['post'] = substr( $row['post'], 0, $len ) . '...';
+				$row['post'] = preg_replace( "/&(#(\d+;?)?)?\.\.\.$/", '...', $row['post'] );
+			}
+
+			$to_echo .= $this->parse_template( $template,
+									    array (
+									    		 'profile_link'	=> $this->ipsclass->base_url."?showuser=".$row['member_id'],
+									    		 'member_name'	=> $row['member_name'],
+												 'member_title'	=> $row['member_title'] ? '<br />'.$row['member_title'] : '',
+									    		 'post_date'	=> $this->ipsclass->get_date( $row['post_date'], 'LONG', 1 ),
+												 'topic_link'	=> $this->ipsclass->base_url."?showtopic={$row['tid']}",
+									    		 'topic_title'	=> $row['title'],
+												 'forum_link'	=> $this->ipsclass->base_url."?showforum={$row['forum_id']}",
+												 'forum_title'	=> $this->ipsclass->cache['forum_cache'][ $row['forum_id'] ]['name'],
+									    		 'post'			=> $row['post'],
+									    		 'posts'		=> $row['posts'],
+									    		 'view_all_link'=> $this->ipsclass->base_url."?showtopic={$row['tid']}",
+												 'member_avatar'=> $row['member_avatar']
+									    	  )
+									    );
+		}
+
+		//-----------------------------------------
+	      	// Get the macros and replace them
+	      	//-----------------------------------------
+
+	      	if ( is_array( $this->ipsclass->skin['_macros'] ) )
+	      	{
+			foreach( $this->ipsclass->skin['_macros'] as $i => $row )
+			{
+				if ( $row['macro_value'] != "" )
+				{
+					$to_echo = str_replace( "<{".$row['macro_value']."}>", $row['macro_replace'], $to_echo );
+				}
+			}
+		}
+
+		$to_echo = str_replace( "<#IMG_DIR#>", $this->ipsclass->skin['_imagedir'], $to_echo );
+		$to_echo = str_replace( "<#EMO_DIR#>", $this->ipsclass->skin['_emodir']  , $to_echo );
+
+		echo $to_echo;
+
+		exit();
+	}
+
+	/**
+	* Do Last Posts
+	*
+	* Show last posts
+	*/
+	function do_last_posts()
+	{
+		$this->ipsclass->load_language('lang_global');
+
+		require_once( ROOT_PATH.'sources/handlers/han_parse_bbcode.php' );
+		$parser                      =  new parse_bbcode();
+		$parser->ipsclass            =& $this->ipsclass;
+		$parser->allow_update_caches = 0;
+		$parser->parse_smilies = 0;
+
+		$perpage = (isset($this->ipsclass->input['show']) AND intval($this->ipsclass->input['show']) > 0) ? intval($this->ipsclass->input['show']) : 10;
+		$perpage = ( $perpage > SSI_MAX_SHOW ) ? SSI_MAX_SHOW : $perpage;
+
+		$post_template = $this->load_template('last_posts.html');
+
+		$to_echo = '';
+		
+		$wheretopics = '';
+		$whereposts = '';
+
+		if( count($this->disable_forums) > 0 )
+		{
+			$wheretopics .= 't.forum_id NOT IN ('.implode(',', $this->disable_forums).') AND ';
+		}
+		
+		// Sort out the forum ids
+		if( isset($this->ipsclass->input['f']) && $this->ipsclass->input['f'] ) {
+			$forums = $this->ipsclass->clean_int_array( explode( ",", $this->ipsclass->input['f'] ) );
+			
+			if( count($forums) > 0 )
+			{
+				$wheretopics .= "t.forum_id IN (".implode(',', $forums).") AND ";
+			}
+		}
+
+		if( intval($this->ipsclass->input['notopics']) == 1 )
+		{
+			$whereposts .= 'p.new_topic!=1 AND ';
+		}
+		
+		if( isset($this->ipsclass->input['topic']) AND intval($this->ipsclass->input['topic']) > 0 )
+		{
+			$wheretopics .= 't.tid='.intval($this->ipsclass->input['topic']).' AND ';
+			$one_topic = 1;
+		}
+		else
+		{
+			$one_topic = 0;
+		}
+
+		$this->ipsclass->DB->build_query( array( 'select'   => 'p.*',
+							 'from'     => array( 'posts' => 'p' ),
+							 'where'    => $wheretopics.$whereposts.'p.queued=0',
+							 'order'    => 'p.post_date DESC',
+							 'limit'    => array( 0, $perpage ),
+							 'add_join' => array( 0 => array( 'select' => 'm.members_display_name as member_name, m.id as member_id, m.title as member_title',
+															  'from'   => array( 'members' => 'm' ),
+															  'where'  => 'm.id=p.author_id',
+															  'type'   => 'left' ),
+												  1 => array( 'select' => 'me.avatar_location, me.avatar_size, me.avatar_type',
+															  'from'   => array( 'member_extra' => 'me' ),
+															  'where'  => 'me.id=p.author_id',
+															  'type'   => 'left' ),
+												  2 => array( 'select' => 't.*',
+															  'from'   => array( 'topics' => 't' ),
+															  'where'  => $whereforums."p.topic_id=t.tid AND t.approved=1 AND t.state != 'closed' AND (t.moved_to is null or t.moved_to = '') AND t.starter_id <> 0",
+															  'type'   => 'left' )  )
+					)      );
+		
+		$sql_result = $this->ipsclass->DB->exec_query();
+
+		if ( !$this->ipsclass->DB->get_num_rows($sql_result) )
+		{
+			fatal_error("Could not get the information from the database");
+		}
+
+		$newsize = (isset($this->ipsclass->input['asize']) AND intval($this->ipsclass->input['asize']) > 0) ? intval($this->ipsclass->input['asize']) : 0;
+		$len = (isset($this->ipsclass->input['len']) AND intval($this->ipsclass->input['len']) > 0) ? intval($this->ipsclass->input['len']) : 0;
+		
+		while( $row = $this->ipsclass->DB->fetch_row($sql_result) )
+		{
+			$parser->parse_html  = ( $this->ipsclass->cache['forum_cache'][ $row['forum_id'] ]['use_html'] and $this->ipsclass->cache['group_cache'][ $row['mgroup'] ]['g_dohtml'] and $row['post_htmlstate'] ) ? 1 : 0;
+			$parser->parse_nl2br = $row['post_htmlstate'] == 2 ? 1 : 0;
+			$parser->parse_wordwrap = $this->ipsclass->vars['post_wordwrap'];
+
+			$row['post']         = $parser->pre_display_parse( $row['post'] );
+			$row['member_name']  = $row['member_name'] ? $row['member_name'] : $row['author_name'];
+			$row['member_avatar'] = $this->ipsclass->get_avatar( $row['avatar_location'], 1, $row['avatar_size'], $row['avatar_type'] );
+
+			if( $newsize )
+			{
+				$row['member_avatar'] = preg_replace("#width='(\d+)'#is", "width='$newsize'", $row['member_avatar']);
+				$row['member_avatar'] = preg_replace("#height='(\d+)'#is", "height='$newsize'", $row['member_avatar']);
+			}
+
+			$row['post'] = $parser->strip_all_tags( $row['post'] );
+			$row['post'] = preg_replace("#([^\s<>'\"/\.\\-\?&\n\r\%]{80})#i", " \\1"."<br />", $row['post']);
+			$row['post'] = str_replace( "\n", '<br />', trim($row['post']) );
+			if( $len and (strlen( $row['post'] ) > $len) )
+			{
+				$row['post'] = substr( $row['post'], 0, $len ) . '...';
+				$row['post'] = preg_replace( "/&(#(\d+;?)?)?\.\.\.$/", '...', $row['post'] );
+			}
+
+			$to_echo .= $this->parse_template( $post_template,
+									    array (
+											'profile_link'	=> $this->ipsclass->base_url.'?showuser='.$row['member_id'],
+											'member_name'	=> $row['member_name'],
+											'member_title'	=> $row['member_title'] ? '<br />'.$row['member_title'] : '',
+											'post_date'	=> $this->ipsclass->get_date( $row['post_date'], 'LONG', 1 ),
+											'topic_link'	=> $this->ipsclass->base_url.'?showtopic='.$row['tid'],
+											'topic_title'	=> $row['title'],
+											'forum_link'	=> $this->ipsclass->base_url.'?showforum='.$row['forum_id'],
+											'forum_title'	=> $this->ipsclass->cache['forum_cache'][ $row['forum_id'] ]['name'],
+											'post'			=> $row['post'],
+											'posts'		=> $row['posts'],
+											'view_all_link'=> $this->ipsclass->base_url.'?showtopic='.$row['tid'].'&amp;view=findpost&amp;p='.$row['pid'],
+											'member_avatar'=> $row['member_avatar']
+									    	  )
+									    );
+		}
+		
+		if( $one_topic AND isset($this->ipsclass->input['showtopicinfo']) AND $this->ipsclass->input['showtopicinfo'] )
+		{			
+			$this->ipsclass->DB->build_query( array( 'select'   => 'tid,title,posts,starter_id,starter_name,forum_id',
+													 'from'     => 'topics',
+													 'where'    => 'tid='.intval($this->ipsclass->input['topic']),
+											)      );
+		
+			$sql_result = $this->ipsclass->DB->exec_query();
+			
+			if( $row = $this->ipsclass->DB->fetch_row($sql_result) )
+			{			
+				if( in_array($row['forum_id'], $this->disable_forums) )
+				{
+					fatal_error("You can't access this topic.");
+				}
+				
+				$topicinfo_template = $this->load_template('last_posts_topicinfo.html');
+				
+				$topic_info = $this->parse_template( $topicinfo_template,
+										array (
+												 'profile_link'	=> $this->ipsclass->base_url.'?act=Profile&CODE=03&MID='.$row['starter_id'],
+												 'starter_name'	=> $row['starter_name'],
+												 'topic_link'	=> $this->ipsclass->base_url.'?act=st&t='.$row['tid'],
+												 'topic_link_last'	=> $this->ipsclass->base_url.'?act=st&t='.$row['tid'].'&view=getlastpost',
+												 'topic_title'	=> $row['title'],
+												 'forum_link'	=> $this->ipsclass->base_url.'?act=sf&f='.$row['forum_id'],
+												 'forum_title'	=> $this->ipsclass->cache['forum_cache'][ $row['forum_id'] ]['name'],
+												 'posts'		=> $row['posts'],
+											  )
+										);
+				$to_echo = $topic_info.$to_echo;
+			}
+		}
+		
+		//-----------------------------------------
+	      	// Get the macros and replace them
+	      	//-----------------------------------------
+
+	      	if ( is_array( $this->ipsclass->skin['_macros'] ) )
+	      	{
+			foreach( $this->ipsclass->skin['_macros'] as $i => $row )
+			{
+				if ( $row['macro_value'] != "" )
+				{
+					$to_echo = str_replace( "<{".$row['macro_value']."}>", $row['macro_replace'], $to_echo );
+				}
+			}
+		}
+
+		$to_echo = str_replace( "<#IMG_DIR#>", $this->ipsclass->skin['_imagedir'], $to_echo );
+		$to_echo = str_replace( "<#EMO_DIR#>", $this->ipsclass->skin['_emodir']  , $to_echo );
+
+		echo $to_echo;
+
+		exit();
+	}
+
+Закрыть файл.
+
+
+2. Загрузить файлы ./ssi_templates/last_topics.html, ./ssi_templates/last_posts.html и ./ssi_templates/last_posts_topicinfo.html в папку ./ssi_templates/ форума.
+
+(также можете сравнить эти шаблоны с шаблоном ./other/last_posts.html. Выбор за вами. Всё равно вы врядли будете пользоваться именно этими шаблонами.)
+
+ВСЁ!
+
+
+#----------------------------------------------------------
+Олег «Sannis» Ефимов:
+http://sannis.ru
+#----------------------------------------------------------
+?>
