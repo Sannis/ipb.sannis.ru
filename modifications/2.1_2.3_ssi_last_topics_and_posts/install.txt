@@ -54,6 +54,9 @@ include("http://domain.com/forums/ssi.php?a=lastposts&show=5&topic=485");
 » вывести перед постами информацию о теме:
 include("http://domain.com/forums/ssi.php?a=lastposts&show=5&topic=485&showtopicinfo=1");
 
+ј также выводить только по одному сообщению из темы:
+include("http://domain.com/forums/ssi.php?a=lastposts&show=5&onepertopic=1");
+
 «акрытые форумы  из которых не должны экспортироватьс€ сообщени€ задаютс€
 в переменной $disable_forums. ќна представл€ет из себ€ массив id закрытых форумов,
 пример определени€ смотрите в начале пункта 1 установки.
@@ -305,6 +308,7 @@ class ssi_autorun
 							 'from'     => array( 'posts' => 'p' ),
 							 'where'    => $wheretopics.$whereposts.'p.queued=0',
 							 'order'    => 'p.post_date DESC',
+							 'group'    => $this->ipsclass->input['onepertopic'] ? 't.tid' : '',
 							 'limit'    => array( 0, $perpage ),
 							 'add_join' => array( 0 => array( 'select' => 'm.members_display_name as member_name, m.id as member_id, m.title as member_title',
 															  'from'   => array( 'members' => 'm' ),
