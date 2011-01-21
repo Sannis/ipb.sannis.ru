@@ -303,12 +303,16 @@ class ssi_autorun
 		{
 			$one_topic = 0;
 		}
+		
+		if( intval($this->ipsclass->input['onepertopic']) == 1 )
+		{
+			$wheretopics .= 'p.post_date = t.last_post AND ';
+		}
 
 		$this->ipsclass->DB->build_query( array( 'select'   => 'p.*',
 							 'from'     => array( 'posts' => 'p' ),
 							 'where'    => $wheretopics.$whereposts.'p.queued=0',
 							 'order'    => 'p.post_date DESC',
-							 'group'    => $this->ipsclass->input['onepertopic'] ? 't.tid' : '',
 							 'limit'    => array( 0, $perpage ),
 							 'add_join' => array( 0 => array( 'select' => 'm.members_display_name as member_name, m.id as member_id, m.title as member_title',
 															  'from'   => array( 'members' => 'm' ),
@@ -318,9 +322,9 @@ class ssi_autorun
 															  'from'   => array( 'member_extra' => 'me' ),
 															  'where'  => 'me.id=p.author_id',
 															  'type'   => 'left' ),
-												  2 => array( 'select' => 't.*',
+												  2 => array( 'select' => 't.tid, t.title',
 															  'from'   => array( 'topics' => 't' ),
-															  'where'  => $whereforums."p.topic_id=t.tid AND t.approved=1 AND t.state != 'closed' AND (t.moved_to is null or t.moved_to = '') AND t.starter_id <> 0",
+															  'where'  => "p.topic_id=t.tid AND t.approved=1 AND t.state != 'closed' AND (t.moved_to is null or t.moved_to = '') AND t.starter_id <> 0",
 															  'type'   => 'left' )  )
 					)      );
 		
