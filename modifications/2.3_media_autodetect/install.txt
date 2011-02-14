@@ -1,0 +1,292 @@
+<?
+#-----------------------------------------------------------
+#-----------------------------------------------------------
+# (SnS) Автоматический распознаватель media
+#-----------------------------------------------------------
+# Для IP.Board 2.3.x
+#-----------------------------------------------------------
+# Основан на моде «Автоматический распознаватель swf/flv v3»
+# http://forums.ibresource.ru/index.php?/topic/53449/
+#-----------------------------------------------------------
+# (C) 2009 Алексей «Arhar» Баранов, 08.10.2009
+# (C) 2010 Олег «Sannis» Ефимов, 27.12.2010
+#-----------------------------------------------------------
+# Объём работ:
+#-----------------------------------------------------------
+#-----------------------------------------------------------
+# Файлы для изменения:
+#  - ./sources/classes/bbcode/class_bbcode_core.php
+#  - ./sources/classes/bbcode/class_bbcode.php
+#  - ./sources/classes/bbcode/class_bbcode_legacy.php
+#  - ./jscripts/ips_text_editor_lite.js
+#  - ./jscripts/ips_text_editor.js
+#-----------------------------------------------------------
+#-----------------------------------------------------------
+#                         УСТАНОВКА
+#-----------------------------------------------------------
+#-----------------------------------------------------------
+
+1. Загрузить файл sns_media_autodetect.php в папку ./sources/lib/ форума.
+
+2. Открыть ./sources/classes/bbcode/class_bbcode_core.php.
+
+Найти:
+
+	/**#@+
+	* Internally defined array
+	* @var string 
+	*/
+	var $quote_html     = array();
+	var $rev_font_sizes = array();
+	var $font_sizes     = array( 1 => '8',
+								 2 => '10',
+								 3 => '12',
+								 4 => '14',
+								 5 => '18',
+								 6 => '24',
+								 7 => '36' );
+	/**#@-*/
+
+Добавить ниже:
+
+	/* (Arhar&Sannis) Media tag autodetect */
+	/**
+	*@var object
+	*/
+	var $media_autodetect;
+	/* (Arhar&Sannis) Media tag autodetect [E] */
+
+
+Найти:
+
+		$show = $url['show'];
+		
+		if ($skip_it != 1)
+		{
+			$stripped = preg_replace( "#^(http|ftp|https|news)://(\S+)$#i", "\\2", $url['show'] );
+			$uri_type = preg_replace( "#^(http|ftp|https|news)://(\S+)$#i", "\\1", $url['show'] );
+			
+			$show = $uri_type.'://'.substr( $stripped , 0, 35 ).'...'.substr( $stripped , -15   );
+		}
+		
+		return ( isset($url['st']) ? $url['st'] : '' ) . "<a href=\"".$url['html']."\" target=\"_blank\">".$show."</a>" . $url['end'];
+
+Добавить выше:
+
+		/* (Arhar&Sannis) Media tag autodetect */
+		$media_html = $this->media_autodetect->detect_from_url($url['html']);
+		
+		if( $media_html != $url['html'] )
+		{
+			return ( isset($url['st']) ? $url['st'] : '' ) . $media_html . $url['end'];
+		}
+		/* (Arhar&Sannis) Media tag autodetect [E] */
+
+
+2. Открыть ./sources/classes/bbcode/class_bbcode.php
+
+Найти:
+
+	function class_bbcode( )
+	{
+
+	}
+
+Заменить на:
+
+	function class_bbcode( )
+	{
+		/* (Arhar&Sannis) Media tag autodetect */
+		require_once( ROOT_PATH."sources/lib/sns_media_autodetect.php" );
+		$this->media_autodetect = new media_autodetect();
+		$this->media_autodetect->ipsclass =& $this->ipsclass;;
+		/* (Arhar&Sannis) Media tag autodetect [E] */
+	}
+
+
+Найти:
+			//-----------------------------------------
+			// Quote
+			//-----------------------------------------
+			
+			$txt = preg_replace( "#<!--QuoteBegin-->(.+?)<!--QuoteEBegin-->#"                        , '[quote]'         , $txt );
+			$txt = preg_replace( "#<!--QuoteBegin-{1,2}([^>]+?)\+([^>]+?)-->(.+?)<!--QuoteEBegin-->#", "[quote=\\1,\\2]" , $txt );
+			$txt = preg_replace( "#<!--QuoteBegin-{1,2}([^>]+?)\+-->(.+?)<!--QuoteEBegin-->#"        , "[quote=\\1]"     , $txt );
+			$txt = preg_replace( "#<!--QuoteEnd-->(.+?)<!--QuoteEEnd-->#"                            , '[/quote]'        , $txt );
+			
+Добавить ниже:
+
+			/* (Arhar&Sannis) Media tag autodetect */
+			$txt = preg_replace( "#<!--media_s:(.+?)-->.+?<!--media_e-->#se", "'[media]'.base64_decode('\\1').'[/media]'", $txt );
+			/* (Arhar&Sannis) Media tag autodetect [E] */
+
+
+Найти:
+
+				$txt = preg_replace_callback( "#(\[flash=)(\S+?)(\,)(\S+?)(\])(\S+?)(\[\/flash\])#i", array( &$this, 'regex_check_flash' ), $txt );
+
+Добавить ниже(внутри скобок):
+
+				/* (Arhar&Sannis) Media tag autodetect */
+				$txt = preg_replace_callback( "#\[media\](.+?)\[/media\]#is", array( &$this->media_autodetect, 'detect_from_tag' ), $txt );
+				/* (Arhar&Sannis) Media tag autodetect [E] */
+
+
+3. Открыть ./sources/classes/bbcode/class_bbcode_legacy.php
+
+Найти:
+
+	function class_bbcode( )
+	{
+		$this->strip_quotes = $this->ipsclass->vars['strip_quotes'];
+	}
+
+Заменить на:
+
+	function class_bbcode( )
+	{
+		$this->strip_quotes = $this->ipsclass->vars['strip_quotes'];
+		
+		/* (Arhar&Sannis) Media tag autodetect */
+		require_once( ROOT_PATH."sources/lib/sns_media_autodetect.php" );
+		$this->media_autodetect = new media_autodetect();
+		$this->media_autodetect->ipsclass =& $this->ipsclass;;
+		/* (Arhar&Sannis) Media tag autodetect [E] */
+	}
+
+Найти:
+			//-----------------------------------------
+			// Quote
+			//-----------------------------------------
+			
+			$txt = preg_replace( "#<!--QuoteBegin-->(.+?)<!--QuoteEBegin-->#"                        , '[quote]'         , $txt );
+			$txt = preg_replace( "#<!--QuoteBegin-{1,2}([^>]+?)\+([^>]+?)-->(.+?)<!--QuoteEBegin-->#", "[quote=\\1,\\2]" , $txt );
+			$txt = preg_replace( "#<!--QuoteBegin-{1,2}([^>]+?)\+-->(.+?)<!--QuoteEBegin-->#"        , "[quote=\\1]"     , $txt );
+			$txt = preg_replace( "#<!--QuoteEnd-->(.+?)<!--QuoteEEnd-->#"                            , '[/quote]'        , $txt );
+
+
+Добавить ниже:
+
+			/* (Arhar&Sannis) Media tag autodetect */
+			$txt = preg_replace( "#<!--media_s:(.+?)-->.+?<!--media_e-->#se", "'[media]'.base64_decode('\\1').'[/media]'", $txt );
+			/* (Arhar&Sannis) Media tag autodetect [E] */
+
+Найти:
+
+				$txt = preg_replace( "#(\[flash=)(\S+?)(\,)(\S+?)(\])(\S+?)(\[\/flash\])#ie", "\$this->regex_check_flash('\\2','\\4','\\6')", $txt );
+
+Добавить ниже(внутри скобок):
+
+				/* (Arhar&Sannis) Media tag autodetect */
+				$txt = preg_replace_callback( "#\[media\](.+?)\[/media\]#is", array( &$this->media_autodetect, 'detect_from_tag' ), $txt )
+				/* (Arhar&Sannis) Media tag autodetect [E] *//
+
+
+4. Открыть ./jscripts/ips_text_editor_lite.js
+
+Найти:
+
+this.ipb_code=function(){var _text=this.get_selection();this.wrap_tags('code',false,_text);};
+
+Добавить после:
+
+this.ipb_media=function(){var _text=this.get_selection();this.wrap_tags('media',false,_text);};
+
+5. Открыть ./jscripts/ips_text_editor.js
+
+Найти:
+
+this.ipb_code=function(){this.wrap_tags_lite('[code]','[/code]',0)};
+
+Добавить после:
+
+this.ipb_media=function(){this.wrap_tags_lite('[media]','[/media]',0)};
+
+
+
+Для несжатой версии, соответсвенно фрагменты из пунктов 4 и 5:
+
+	/**
+	* STD:
+	* IPB code override
+	*/
+	this.ipb_code = function()
+	{
+		var _text = this.get_selection();
+		this.wrap_tags( 'code', false, _text );
+	};
+	
+	/**
+	* STD:
+	* IPB media override
+	*/
+	this.ipb_media = function()
+	{
+		var _text = this.get_selection();
+		this.wrap_tags( 'media', false, _text );
+	};
+
+	/**
+	* STD:
+	* IPB code override
+	*/
+	this.ipb_code = function()
+	{
+		this.wrap_tags_lite(  '[code]', '[/code]', 0)
+	};
+
+	/**
+	* STD:
+	* IPB media override
+	*/
+	this.ipb_media = function()
+	{
+		this.wrap_tags_lite(  '[media]', '[/media]', 0)
+	};
+
+
+
+6. Идем в Админцентр -> Внешний вид -> Редактировать HTML шаблоны (ВАЖНО! Если вы используете не один стиль, необходимо проделать следующие ниже действия со всеми стилями)
+
+Выбираем, skin_topiс, quick_reply_box_open
+
+Найти:
+
+<td><div class="rte-normal" id="fast-reply_cmd_ipb_code"><img src="style_images/<#IMG_DIR#>/folder_editor_images/rte-code-button.png"  alt="{$this->ipsclass->lang['js_rte_lite_code']}" title="{$this->ipsclass->lang['js_rte_lite_code']}"></div></td>
+
+Добавить после:
+
+<td><div class="rte-normal" id="fast-reply_cmd_ipb_media"><img src="style_images/<#IMG_DIR#>/folder_editor_images/rte-media-button.png" alt="Media" title="Media"></div></td>
+
+Сохранить шаблон, выбираем skin_editors, ips_editor
+
+Найти:
+
+<td><div class="rte-normal" id="{$editor_id}_cmd_ipb_code"><img src="{$images_path}rte-code-button.png"  alt="{$this->ipsclass->lang['js_rte_lite_code']}" title="{$this->ipsclass->lang['js_rte_lite_code']}"></div></td>
+
+Добавить после:
+
+<td><div class="rte-normal" id="{$editor_id}_cmd_ipb_media"><img src="{$images_path}rte-media-button.png"  alt="Media" title="Media"></div></td>
+
+Сохранить шаблон, выбираем skin_post, inline_edit_quick_box
+
+Найти:
+
+<td><div class="rte-normal" id="{$pid}_cmd_ipb_code"><img src="style_images/<#IMG_DIR#>/folder_editor_images/rte-code-button.png"  alt="{$this->ipsclass->lang['js_rte_lite_code']}" title="{$this->ipsclass->lang['js_rte_lite_code']}"></div></td>
+
+Добавить после:
+
+<td><div class="rte-normal" id="{$pid}_cmd_ipb_media"><img src="style_images/<#IMG_DIR#>/folder_editor_images/rte-media-button.png"  alt="Media" title="Media"></div></td>
+
+
+7. Загрузите rte-media-button.png в style_images/<#IMG_DIR#>/folder_editor_images/
+   (ВАЖНО! Если используется несколько стилей, необходимо залить кнопку во все стили)
+
+ВСЁ!
+
+
+#----------------------------------------------------------
+Олег «Sannis» Ефимов:
+http://sannis.ru
+#----------------------------------------------------------
+?>
