@@ -240,20 +240,20 @@ class media_autodetect
 		//----------------
 		
 		// Find custom Youtube video
-		$matches[1] = preg_replace_callback( "/(?:\&amp;|\&)lt;object width=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot; height=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot;(.+?)(?:\&amp;|\&)lt;param name=(?:\&amp;|\&)quot;movie(?:\&amp;|\&)quot; value=(?:\&amp;|\&)quot;http:\/\/www\.youtube([\-nocookie]*?)\.com\/v\/(.+?)(?:\&amp;|\&)quot;(?:\&amp;|\&)gt;(.+?)(?:\&amp;|\&)lt;\/object(?:\&amp;|\&)gt;/is", array(&$this,"media_detect_youtube"), $matches[1]);
+		$matches[1] = preg_replace_callback( "/&lt;object width=&quot;(\d+?)&quot; height=&quot;(\d+?)&quot;(.+?)&lt;param name=&quot;movie&quot; value=&quot;http:\/\/www\.youtube([\-nocookie]*?)\.com\/v\/(.+?)&quot;&gt;(.+?)&lt;\/object&gt;/is", array(&$this,"media_detect_youtube"), $matches[1]);
 		
 		// Find Yandex video
-		$matches[1] = preg_replace_callback( "/(?:\&amp;|\&)lt;object width=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot; height=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot;(?:.+?)(?:\&amp;|\&)lt;param name=(?:\&amp;|\&)quot;video(?:\&amp;|\&)quot; value=(?:\&amp;|\&)quot;http:\/\/(.+?)\.video\.yandex.ru\/lite\/([^\/]+?)\/([^\/]+?)[\/]{0,1}(?:\&amp;|\&)quot;(?:.+?)(?:\&amp;|\&)lt;\/object(?:\&amp;|\&)gt;/is", array(&$this,"media_detect_yandex_video"), $matches[1]);
+		$matches[1] = preg_replace_callback( "/&lt;object width=&quot;(\d+?)&quot; height=&quot;(\d+?)&quot;(?:.+?)&lt;param name=&quot;video&quot; value=&quot;http:\/\/(.+?)\.video\.yandex.ru\/lite\/([^\/]+?)\/([^\/]+?)[\/]{0,1}&quot;(?:.+?)&lt;\/object&gt;/is", array(&$this,"media_detect_yandex_video"), $matches[1]);
 		
 		// Find Repka.tv video
-		$matches[1] = preg_replace_callback( "/(?:\&amp;|\&)lt;embed(?:.+?)flashvars=(?:\&amp;|\&)quot;url=http:\/\/repka\.tv\/externalPlayer\/([^\/]+?\/[^\/]+?\/[^\/]+?\/[^\/]+?\/[^\/]+?)(?:\&amp;|\&)quot;(?:.+?)width=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot; height=(?:\&amp;|\&)quot;(\d+?)(?:\&amp;|\&)quot;(?:.+?)(?:\&amp;|\&)lt;\/embed(?:\&amp;|\&)gt;/is", array(&$this,"media_detect_repkatv"), $matches[1]);
-			
+		$matches[1] = preg_replace_callback( "/&lt;embed(?:.+?)flashvars=&quot;url=http:\/\/repka\.tv\/externalPlayer\/([^\/]+?\/[^\/]+?\/[^\/]+?\/[^\/]+?\/[^\/]+?)&quot;(?:.+?)width=&quot;(\d+?)&quot; height=&quot;(\d+?)&quot;(?:.+?)&lt;\/embed&gt;/is", array(&$this,"media_detect_repkatv"), $matches[1]);
+		
 		// Find Vkadre video
 		// FIXME
-		$matches[1] = preg_replace( "/(?:\&amp;|\&)lt;object (.+?)(?:\&amp;|\&)lt;param name=(?:\&amp;|\&)quot;movie(?:\&amp;|\&)quot; value=(?:\&amp;|\&)quot;http:\/\/vkadre\.ru\/swf\/VkadrePlayer\.swf\?1(?:\&amp;|\&)quot; \/(?:\&amp;|\&)gt;(.+?)(?:\&amp;|\&)lt;param name=(?:\&amp;|\&)quot;flashvars(?:\&amp;|\&)quot; value=(?:\&amp;|\&)quot;(.+?)(?:\&amp;|\&)quot; \/(?:\&amp;|\&)gt;(.+?)(?:\&amp;|\&)lt;\/object(?:\&amp;|\&)gt;/ies", "\$this->media_detect_vkadre(\"\\3\")", $matches[1]);
+		$matches[1] = preg_replace( "/&lt;object (.+?)&lt;param name=&quot;movie&quot; value=&quot;http:\/\/vkadre\.ru\/swf\/VkadrePlayer\.swf\?1&quot; \/&gt;(.+?)&lt;param name=&quot;flashvars&quot; value=&quot;(.+?)&quot; \/&gt;(.+?)&lt;\/object&gt;/ies", "\$this->media_detect_vkadre(\"\\3\")", $matches[1]);
 		
 		// Find MySpace video
-		$matches[1] = preg_replace_callback( "/^(?:.+?)(?:\&amp;|\&)lt;object width=(?:\&amp;|\&)quot;(\d+?px)(?:\&amp;|\&)quot; height=(?:\&amp;|\&)quot;(\d+?px)(?:\&amp;|\&)quot;(?:.+?)(?:\&amp;|\&)lt;param name=(?:\&amp;|\&)quot;movie(?:\&amp;|\&)quot; value=(?:\&amp;|\&)quot;http:\/\/mediaservices\.myspace\.com\/services\/media\/embed\.aspx\/m=(\d+)(?:.+?)(?:\&amp;|\&)quot;\/(?:\&amp;|\&)gt;(?:.+?)(?:\&amp;|\&)lt;\/object(?:\&amp;|\&)gt;(?:.+?)$/ism", array(&$this,"media_detect_myspace_video"), $matches[1]);
+		$matches[1] = preg_replace_callback( "/^(?:.+?)&lt;object width=&quot;(\d+?px)&quot; height=&quot;(\d+?px)&quot;(?:.+?)&lt;param name=&quot;movie&quot; value=&quot;http:\/\/mediaservices\.myspace\.com\/services\/media\/embed\.aspx\/m=(\d+)(?:.+?)&quot;\/&gt;(?:.+?)&lt;\/object&gt;(?:.+?)$/ism", array(&$this,"media_detect_myspace_video"), $matches[1]);
 		
 		// Find VKontakte video
 		$matches[1] = preg_replace_callback( "/^\&lt;iframe src=\&quot;http:\/\/(vkontakte\.ru|vk\.com)\/video_ext\.php\?oid=(\d+?)\&amp;id=(\d+?)\&amp;hash=([a-z\d]+?)\&quot; width=\&quot;(\d+?)\&quot; height=\&quot;(\d+?)\&quot;(?:.+?)\&gt;\&lt;\/iframe\&gt;$/is", array(&$this,"media_detect_vkontakte_video"), $matches[1]);
